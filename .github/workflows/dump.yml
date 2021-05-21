@@ -1,0 +1,40 @@
+# vim: expandtab tabstop=2 shiftwidth=2
+name: Test
+
+on: 
+  push:
+  workflow_dispatch:
+    inputs:
+      unk:
+
+env:
+  exec_path: "allstars"
+  metadata_path: 'global-metadata.dat'
+  output_dir: "."
+  il2cpp_dumper_version: 'latest'
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  metadata_decode:
+    name: 'Run Il2CppDumper'
+    runs-on: "windows-latest"
+    steps:
+      - run: mkdir ${{ runner.temp }}/Il2CppDumper
+      - uses: i3h/download-release-asset@v1
+        name: Download Il2CppDumper
+        working-directory: ${{ runner.temp }}/Il2CppDumper
+        with:
+          owner: Perfare
+          repo: Il2CppDumper
+          tag: ${{ envs.il2cpp_dumper_version }}
+          file: /Il2CppDumper-netcore-(.*?)\.zip/
+          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+      - run: unzip Il2CppDumper-netcore-*.zip
+        working-directory: ${{ runner.temp }}/Il2CppDumper
+      - run: echo Running Il2CppDumper for ${{ envs.exec_path }} with metadata ${{ envs.metadata_path }} \
+            && dotnet ${{ runner.temp }}/Il2CppDumper/Il2CppDumper.dll ${{ envs.exec_path }} ${{ envs.metadata_path }} ${{ envs.output_dir }}
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
