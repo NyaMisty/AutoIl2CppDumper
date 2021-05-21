@@ -1,11 +1,12 @@
 # vim: expandtab tabstop=2 shiftwidth=2
-name: Test
+name: Run Il2CppDumper
 
 on: 
   push:
   workflow_dispatch:
     inputs:
       unk:
+  repository_dispatch:
 
 env:
   exec_path: "allstars"
@@ -19,22 +20,18 @@ defaults:
 
 jobs:
   metadata_decode:
-    name: 'Run Il2CppDumper'
-    runs-on: "windows-latest"
+    name: 'Do Il2CppDumper'
+    runs-on: "ubuntu-latest"
     steps:
-      - run: mkdir ${{ runner.temp }}/Il2CppDumper
       - uses: i3h/download-release-asset@v1
         name: Download Il2CppDumper
-        working-directory: ${{ runner.temp }}/Il2CppDumper
         with:
           owner: Perfare
           repo: Il2CppDumper
-          tag: ${{ envs.il2cpp_dumper_version }}
+          tag: ${{ env.il2cpp_dumper_version }}
           file: /Il2CppDumper-netcore-(.*?)\.zip/
-          token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
-      - run: unzip Il2CppDumper-netcore-*.zip
-        working-directory: ${{ runner.temp }}/Il2CppDumper
-      - run: echo Running Il2CppDumper for ${{ envs.exec_path }} with metadata ${{ envs.metadata_path }} \
-            && dotnet ${{ runner.temp }}/Il2CppDumper/Il2CppDumper.dll ${{ envs.exec_path }} ${{ envs.metadata_path }} ${{ envs.output_dir }}
+      - run: mkdir /tmp/Il2CppDumper && mv Il2CppDumper-netcore-*.zip /tmp/Il2CppDumper && cd /tmp/Il2CppDumper && unzip Il2CppDumper-netcore-*.zip
+      - run: echo Running Il2CppDumper for ${{ env.exec_path }} with metadata ${{ env.metadata_path }} \
+            && dotnet /tmp/Il2CppDumper/Il2CppDumper.dll ${{ env.exec_path }} ${{ env.metadata_path }} ${{ env.output_dir }}
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
